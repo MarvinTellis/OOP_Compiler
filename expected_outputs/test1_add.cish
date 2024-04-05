@@ -1,0 +1,16 @@
+main() {
+  let result = 0; {
+    let obj = 0;{
+      obj = malloc(8);
+      *obj = 1;
+      *(obj+4) = 2;
+      let t1 = 0;{
+        result = *obj;
+        t1 = result;
+        result = *(obj+4);
+        result = result + t1;
+      }
+    }
+    return result;
+  }
+}

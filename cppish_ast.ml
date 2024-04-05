@@ -15,14 +15,14 @@ type rexp =
 | Not of exp                          (* !x *)
 | And of exp * exp                    (* x < y && y < z *)
 | Or of exp * exp                     (* x < y || x < z *)
-| Assign of var * exp                 (* x = y+42 *)
+| Assign of var * exp                 (* x = y+42 , obj = new A*)
 | Field of var * var * exp            (* obj.x = y+42 *)
 | Call of exp * (exp list)            (* f(x,y,z) *)
 | Method of exp * exp * (exp list)    (* obj.f(x,y,z) *)
 | Load of exp                         (* *(x+3) *)
 | Store of exp * exp                  (* *(x+3) = e *)
 | Malloc of exp                       (* malloc(i) *)
-| New of var                          (* obj = new A; *)
+| New of var                          (* new A; *)
 
 (* every expression comes with its position *)
 and exp = rexp * pos
@@ -43,7 +43,14 @@ and stmt = rstmt * pos
 type funcsig =  { name : var; args : var list; body : stmt; pos : pos } 
 type func = Fn of funcsig 
 
-type classig =  { name : var; body : stmt; extend : var list;  pos : pos } 
+type classtmt =
+  Seq of classtmt * classtmt
+| Let of var * exp * stmt
+| Fn of funcsig
+
+and clasBody = classtmt * pos
+
+type classig =  { name : var; body : clasBody; extend : var list;  pos : pos } 
 type clas = Clas of classig
 
 let skip : rstmt = Exp(Int 0,0)          (* simulate a skip statement *)
@@ -153,6 +160,21 @@ let rec s2s i (s,_) =
 (* convert a statement to string with starting nesting depth of 0 *)
 let stmt2string s = s2s 0 s
 
+(* convert a function to a string *)
+let fn2string (f : func) = 
+  let Fn (f') = f in
+  f'.name ^ "(" ^ (String.concat "," f'.args) ^ ") {\n" ^
+  (s2s 3 f'.body) ^ "}\n"
+
+(* convert a statement to string -- i tracks the current nesting depth *)
+let rec cs2s i (s,_) = 
+match s with
+ Seq(s1, s2) -> (cs2s i (s1,0))^(cs2s i (s2,0))
+| Let(x,e,s) -> 
+  (tab i)^"let "^x^" = "^(exp2string e)^"; {\n"^(s2s (i+2) s)^(tab i)^"}\n"
+| Fn(f) -> 
+  (tab i) ^ fn2string (Fn f)
+
 (* convert a class to a string *)
 let clas2string f = 
   let Clas (f') = f in
@@ -161,13 +183,7 @@ let clas2string f =
     | [ x ] -> " extends " ^ x
     | _ -> raise (Failure "Multiple inheritance not supported") in
   f'.name ^ extend_str ^ " {\n" ^
-  (s2s 3 f'.body) ^ "}\n"
-
-(* convert a function to a string *)
-let fn2string f = 
-    let Fn (f') = f in
-    f'.name ^ "(" ^ (String.concat "," f'.args) ^ ") {\n" ^
-    (s2s 3 f'.body) ^ "}\n"
+  cs2s 3 f'.body ^ "}\n"
 
 (* convert a program to a string *)
 (* let prog2string fs = String.concat "" (List.map fn2string fs) *)
@@ -175,4 +191,3 @@ let prog2string fs = String.concat "" (List.map ( fun x ->
   match x with 
     ClassDef c -> clas2string c
   | FuncDef f -> fn2string f ) fs)
-

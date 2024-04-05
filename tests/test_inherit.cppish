@@ -1,0 +1,16 @@
+Class A{
+  let x = 0;
+  let y = 0;
+}
+Class B extends A{
+  let a = 0;
+  let b = 0;
+}
+main() {
+  let foo = new B;
+  foo.x = 2;
+  foo.y = 3;
+  foo.a = 10;
+  foo.b = 12;
+  return foo.a - foo.y;
+}

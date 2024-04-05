@@ -1,0 +1,17 @@
+Class A{
+  let x = 0;
+  let y = 0;
+}
+Class B{
+  let a = 0;
+  let b = 0;
+}
+main() {
+  let obj = new A;
+  let foo = new B;
+  obj.x = 2;
+  obj.y = 3;
+  foo.a = 10;
+  foo.b = 12;
+  return foo.a - obj.y;
+}

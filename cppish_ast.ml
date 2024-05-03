@@ -43,14 +43,14 @@ and stmt = rstmt * pos
 type funcsig =  { name : var; args : var list; body : stmt; pos : pos } 
 type func = Fn of funcsig 
 
-type classtmt =
+type rclasstmt =
   Seq of classtmt * classtmt
-| Let of var * exp * stmt
-| Fn of funcsig
+| Let of var * exp             (* let x=0; *)
+| Fn of funcsig                       (* Class Method def *)
 
-and clasBody = classtmt * pos
+and classtmt = rclasstmt * pos
 
-type classig =  { name : var; body : clasBody; extend : var list;  pos : pos } 
+type classig =  { name : var; body : classtmt; extend : var;  pos : pos } 
 type clas = Clas of classig
 
 let skip : rstmt = Exp(Int 0,0)          (* simulate a skip statement *)
@@ -167,27 +167,27 @@ let fn2string (f : func) =
   (s2s 3 f'.body) ^ "}\n"
 
 (* convert a statement to string -- i tracks the current nesting depth *)
-let rec cs2s i (s,_) = 
+(* let rec cs2s i (s,_) = 
 match s with
  Seq(s1, s2) -> (cs2s i (s1,0))^(cs2s i (s2,0))
 | Let(x,e,s) -> 
   (tab i)^"let "^x^" = "^(exp2string e)^"; {\n"^(s2s (i+2) s)^(tab i)^"}\n"
 | Fn(f) -> 
-  (tab i) ^ fn2string (Fn f)
+  (tab i) ^ fn2string (Fn f) *)
 
 (* convert a class to a string *)
-let clas2string f = 
+(* let clas2string f = 
   let Clas (f') = f in
   let extend_str = match f'.extend with
     [] -> ""
     | [ x ] -> " extends " ^ x
     | _ -> raise (Failure "Multiple inheritance not supported") in
   f'.name ^ extend_str ^ " {\n" ^
-  cs2s 3 f'.body ^ "}\n"
+  cs2s 3 f'.body ^ "}\n" *)
 
 (* convert a program to a string *)
 (* let prog2string fs = String.concat "" (List.map fn2string fs) *)
 let prog2string fs = String.concat "" (List.map ( fun x ->
   match x with 
-    ClassDef c -> clas2string c
+    ClassDef c -> "" (* clas2string c *)
   | FuncDef f -> fn2string f ) fs)

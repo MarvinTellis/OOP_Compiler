@@ -1,13 +1,17 @@
 main() {
   let result = 0; {
     let obj = 0;{
-      obj = malloc(8);
-      *obj = 1;
-      *(obj+4) = 2;
+      obj = malloc(12);
+      *(obj+4) = 0; 
+      *(obj+8) = 0;    
+
+      *(obj+4) = 1;
+      *(obj+8) = 2;
+
       let t1 = 0;{
-        result = *obj;
-        t1 = result;
         result = *(obj+4);
+        t1 = result;
+        result = *(obj+8);
         result = result + t1;
       }
     }

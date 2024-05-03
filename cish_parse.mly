@@ -1,5 +1,5 @@
 %{
-open Cppish_ast
+open Cish_ast
 open Lexing
 (* use this to get the line number for the n'th token *)
 let rhs n =
@@ -14,28 +14,24 @@ let parse_error s =
 %start program
 
 /* nonterminals */
-%type <Cppish_ast.program> program
-%type <Cppish_ast.clas_or_func list> clasOrFuncList
-%type <Cppish_ast.clas_or_func> clasOrFunc
-%type <Cppish_ast.func> func
-%type <Cppish_ast.clas> clas
-%type <Cppish_ast.var list> idlist
-%type <Cppish_ast.var list> formals
-%type <Cppish_ast.classtmt> classtmt
-%type <Cppish_ast.classtmt> classtmtlist
-%type <Cppish_ast.stmt> stmt
-%type <Cppish_ast.stmt> stmtlist
-%type <Cppish_ast.exp> yexp
-%type <Cppish_ast.exp list> explist
-%type <Cppish_ast.exp> orexp
-%type <Cppish_ast.exp> andexp
-%type <Cppish_ast.exp> equalexp
-%type <Cppish_ast.exp> relnexp
-%type <Cppish_ast.exp> addexp
-%type <Cppish_ast.exp> mulexp
-%type <Cppish_ast.exp> unaryexp
-%type <Cppish_ast.exp> atomicexp
-%type <Cppish_ast.exp option> expopt
+%type <Cish_ast.program> program
+%type <Cish_ast.func list> functionlist
+%type <Cish_ast.func> func
+%type <Cish_ast.var list> idlist
+%type <Cish_ast.var list> formals
+%type <Cish_ast.stmt> stmt
+%type <Cish_ast.stmt> stmtlist
+%type <Cish_ast.exp> yexp
+%type <Cish_ast.exp list> explist
+%type <Cish_ast.exp> orexp
+%type <Cish_ast.exp> andexp
+%type <Cish_ast.exp> equalexp
+%type <Cish_ast.exp> relnexp
+%type <Cish_ast.exp> addexp
+%type <Cish_ast.exp> mulexp
+%type <Cish_ast.exp> unaryexp
+%type <Cish_ast.exp> atomicexp
+%type <Cish_ast.exp option> expopt
 
 /* terminals */
 %token SEMI LPAREN RPAREN LBRACE RBRACE
@@ -46,33 +42,16 @@ let parse_error s =
 %token <int> INT 
 %token <string> ID 
 %token EOF
-%token CLAS PERIOD NEW EXTEND
 
 /* Start grammer rules*/
 %%
 
 program :
-  clasOrFuncList { $1 }
+  functionlist { $1 }
 
-clasOrFuncList :
-  clasOrFunc { [$1] }
-| clasOrFunc program { $1::$2 }
-
-clasOrFunc:
-  clas { ClassDef $1 } 
-| func { FuncDef $1 }
-
-clas :
-  CLAS ID LBRACE classtmtlist RBRACE { Clas{name=$2;body=$4;extend="";pos=rhs 1} }
-| CLAS ID EXTEND ID LBRACE classtmtlist RBRACE { Clas{name=$2;body=$6;extend=$4;pos=rhs 1} }
-
-classtmt : 
-  LET ID EQ yexp SEMI { (Let($2,$4), rhs 1) }
-| ID formals LBRACE stmtlist RBRACE { (Fn{name=$1;args=$2;body=$4;pos=rhs 1}, rhs 1) }
-
-classtmtlist : 
-  classtmt { $1 }
-| classtmt classtmtlist { (Seq($1,$2), rhs 1) }
+functionlist :
+  func { [$1] }
+| func program { $1::$2 }
 
 func :
   ID formals LBRACE stmtlist RBRACE { Fn{name=$1;args=$2;body=$4;pos=rhs 1} }
@@ -112,7 +91,6 @@ expopt :
 yexp:
   orexp { $1 }
 | ID EQ yexp { (Assign($1,$3), rhs 1) }
-| ID PERIOD ID EQ yexp { (Field($1,$3,$5), rhs 1) }
 | TIMES unaryexp EQ yexp { (Store($2,$4), rhs 1) }
 
 explist :
@@ -159,10 +137,7 @@ unaryexp :
 atomicexp :
   INT { (Int $1, rhs 1) }
 | ID { (Var $1, rhs 1) }
-| NEW ID { (New $2, rhs 1) }
 | atomicexp LPAREN RPAREN { (Call($1,[]), rhs 1) }
 | atomicexp LPAREN explist RPAREN { (Call($1,$3), rhs 1) }
-| atomicexp PERIOD atomicexp LPAREN RPAREN { (Method($1,$3,[]), rhs 1) }
-| atomicexp PERIOD atomicexp LPAREN explist RPAREN { (Method($1,$3,$5), rhs 1) }
 | MALLOC LPAREN yexp RPAREN { (Malloc($3), rhs 1) }
 | LPAREN yexp RPAREN { $2 }

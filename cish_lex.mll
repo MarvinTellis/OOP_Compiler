@@ -1,6 +1,6 @@
 (* header section *)
 {
-open Cppish_parse
+open Cish_parse
 open Lexing
 
 let incr_lineno lexbuf =
@@ -52,10 +52,6 @@ rule lexer = parse
 | "for" { FOR }
 | "let" { LET }
 | "malloc" { MALLOC }
-| "extend" { EXTEND }
-| "class" { CLAS }
-| "." { PERIOD }
-| "new" { NEW }
 | id { ID(Lexing.lexeme lexbuf) }
 | digit+ { INT(int_of_string(Lexing.lexeme lexbuf)) } 
 | "/*" { comment lexbuf } (* comment start *)

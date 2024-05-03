@@ -1,0 +1,49 @@
+main() {
+  let result = 0; {
+    let obj = 0;{
+      
+      /* On Object instantiation
+      * Allocate memory for object (vtable reference and class data fields)
+      * initialize all class data fields to 0;
+      * Allocate memory for vtable
+      * Store function references in vtable
+      */
+
+      obj = malloc(12);
+      *(obj+4) = 0;     // initialize x = 0
+      *(obj+8) = 0;     // initialize y = 0
+      *(obj) = malloc(4);    // vtable allocation
+      *(*obj) = func1;       // A.foo
+
+      *(obj+4) = 1;     // obj.x = 1
+      *(obj+8) = 2;     // obj.y = 2
+
+      /* On Class Method invocation
+      */
+      t3 = *(obj);      // fetch vtable reference
+      t4 = *t3          // fetch method reference within vtable
+      let t5 = 0;{
+        result = 5;
+        t5 = result;
+      }
+      result = t4(obj, t5);   // Invoke the class method
+    }
+    return result;
+  }
+}
+func1(this, z){
+  let result = 0{
+    let t1 = 0;{
+      result = *(this+4);
+      t1 = result;
+      result = *(this+8);
+      result = result + t1;
+      let t2 = 0;{
+        t2 = result;
+        result = z;
+        result = result + t2;
+      }
+    }
+    return result;
+  }
+}

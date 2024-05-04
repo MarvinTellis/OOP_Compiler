@@ -1,0 +1,73 @@
+main(){
+  let result = 0; {
+    let boo = 0;{
+      let obj = 0;{
+
+        boo = malloc(20);
+        *(boo+4) = 0; 
+        *(boo+8) = 0;    
+        *(boo+12) = 0;
+        *(boo+16) = 0;
+        *boo = malloc(8);
+        **boo = func1;
+        *(*boo + 4) = func2;
+
+        obj = malloc(12);
+        *(boo+4) = 0; 
+        *(boo+8) = 0;
+        *obj = malloc(4);
+        *(*obj) = func1; 
+
+        *(boo+4) = 2;
+        *(boo+8) = 3;
+        *(boo+12) = 2;
+        *(boo+16) = 3;
+
+        *(obj+4) = 10;
+        *(obj+8) = 12;
+
+        let t1 = 0 ; {
+          let t2 = 0; {
+            let t3 = 0; {
+              t2 = *boo;      
+              t3 = *(t2+4);  
+              result = t3(boo); 
+            }
+          }
+          t1 = result;
+          let t4 = 0; {
+            let t5 = 0; {
+              t4 = *obj;      
+              t5 = *(t4);  
+              result = t5(obj); 
+            }
+          }
+          result = result + t1;
+        }
+      }
+    }
+    return result;
+  }
+}
+func1(this){
+  let result = 0; {
+    let t1 = 0; {
+      result = *(this+4);
+      t1 = result;
+      result = *(this+8);
+      result = result + t1;
+    }
+    return result;
+  }
+}
+func2(this){
+  let result = 0; {
+    let t1 = 0; {
+      result = *(this+12);
+      t1 = result;
+      result = *(this+16);
+      result = result + t1;
+    }
+    return result;
+  }
+}

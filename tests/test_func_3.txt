@@ -5,10 +5,14 @@ Class A{
   foo(){
     return x + y;
   }
+  bar(z){
+    return x + y + z;
+  }
 }
 main() {
   let obj = new A;
   obj.x = 1;
   obj.y = 2;
-  return obj.foo();
+  let m = obj.foo();
+  return obj.bar(m);
 }

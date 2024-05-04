@@ -12,8 +12,11 @@ main() {
   obj.y = 2;
   return obj.foo(5);
 }
+
 Variable depth 
 A : [ x y ]
+B : [ x y a b ]
 
 Function depth
-A  : [ (foo : func1) (bar : func2) ]
+A  : [ (foo) (bar) ]
+B  : [ (foo) (bar) (car) ]

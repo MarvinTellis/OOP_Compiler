@@ -13,7 +13,7 @@ let parse_file () =
   let ch = open_in argv.(1) in
   Cppish_parse.program Cppish_lex.lexer (Lexing.from_channel ch)
 
-let compile_prog prog = Cppish_compile.compile_exp prog
+let compile_prog prog = Cppish_compile.compile_program_body prog
 
 (* let run_prog prog = Cppish_eval.run prog *)
 

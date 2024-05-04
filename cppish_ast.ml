@@ -41,7 +41,7 @@ type rstmt =
 and stmt = rstmt * pos
 
 type funcsig =  { name : var; args : var list; body : stmt; pos : pos } 
-type func = Fn of funcsig 
+(* type func = Fn of funcsig  *)
 
 type rclasstmt =
   Seq of classtmt * classtmt
@@ -51,13 +51,13 @@ type rclasstmt =
 and classtmt = rclasstmt * pos
 
 type classig =  { name : var; body : classtmt; extend : var;  pos : pos } 
-type clas = Clas of classig
+(* type clas = Clas of classig *)
 
 let skip : rstmt = Exp(Int 0,0)          (* simulate a skip statement *)
 
 type clas_or_func = 
-  ClassDef of clas
-| FuncDef of func
+  Clas of classig
+| Fn of funcsig
 
 type program = clas_or_func list
 
@@ -161,8 +161,8 @@ let rec s2s i (s,_) =
 let stmt2string s = s2s 0 s
 
 (* convert a function to a string *)
-let fn2string (f : func) = 
-  let Fn (f') = f in
+let fn2string (f' : funcsig) = 
+  (* let Fn (f') = f in *)
   f'.name ^ "(" ^ (String.concat "," f'.args) ^ ") {\n" ^
   (s2s 3 f'.body) ^ "}\n"
 
@@ -189,5 +189,5 @@ match s with
 (* let prog2string fs = String.concat "" (List.map fn2string fs) *)
 let prog2string fs = String.concat "" (List.map ( fun x ->
   match x with 
-    ClassDef c -> "" (* clas2string c *)
-  | FuncDef f -> fn2string f ) fs)
+    Clas c -> "" (* clas2string c *)
+  | Fn f -> fn2string f ) fs)

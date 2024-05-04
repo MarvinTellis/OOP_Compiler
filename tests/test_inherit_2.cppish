@@ -1,22 +1,29 @@
 Class A{
   let x = 0;
   let y = 0;
+
+  car(){
+    return x + y;
+  }
 }
 Class B extends A{
   let a = 0;
   let b = 0;
-}
-Class C extends B{
-  let m = 0;
-  let n = 0;
+
+  bar(){
+    return a + b;
+  }
 }
 main() {
-  let foo = new C;
-  foo.x = 2;
-  foo.y = 3;
-  foo.a = 10;
-  foo.b = 12;
-  foo.m = 100;
-  foo.n = 120;
-  return foo.n + foo.a + foo.x;
+  let boo = new B;
+  let obj = new A;
+  boo.x = 2;
+  boo.y = 3;
+  boo.a = 2;
+  boo.b = 3;
+
+  obj.x = 10;
+  obj.y = 12;
+  
+  return boo.bar() + obj.car();
 }

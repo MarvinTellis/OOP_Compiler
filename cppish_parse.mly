@@ -15,10 +15,7 @@ let parse_error s =
 
 /* nonterminals */
 %type <Cppish_ast.program> program
-%type <Cppish_ast.clas_or_func list> clasOrFuncList
 %type <Cppish_ast.clas_or_func> clasOrFunc
-%type <Cppish_ast.func> func
-%type <Cppish_ast.clas> clas
 %type <Cppish_ast.var list> idlist
 %type <Cppish_ast.var list> formals
 %type <Cppish_ast.classtmt> classtmt
@@ -52,19 +49,13 @@ let parse_error s =
 %%
 
 program :
-  clasOrFuncList { $1 }
-
-clasOrFuncList :
   clasOrFunc { [$1] }
 | clasOrFunc program { $1::$2 }
 
 clasOrFunc:
-  clas { ClassDef $1 } 
-| func { FuncDef $1 }
-
-clas :
   CLAS ID LBRACE classtmtlist RBRACE { Clas{name=$2;body=$4;extend="";pos=rhs 1} }
 | CLAS ID EXTEND ID LBRACE classtmtlist RBRACE { Clas{name=$2;body=$6;extend=$4;pos=rhs 1} }
+| ID formals LBRACE stmtlist RBRACE { Fn{name=$1;args=$2;body=$4;pos=rhs 1} }
 
 classtmt : 
   LET ID EQ yexp SEMI { (Let($2,$4), rhs 1) }
@@ -73,9 +64,6 @@ classtmt :
 classtmtlist : 
   classtmt { $1 }
 | classtmt classtmtlist { (Seq($1,$2), rhs 1) }
-
-func :
-  ID formals LBRACE stmtlist RBRACE { Fn{name=$1;args=$2;body=$4;pos=rhs 1} }
 
 formals :
   LPAREN RPAREN { [] }

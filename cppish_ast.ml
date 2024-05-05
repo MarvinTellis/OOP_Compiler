@@ -1,4 +1,4 @@
-(* The abstract syntax for our little subset of C -- includes rudimentary 
+(* The abstract syntax for our little subset of Cpp -- includes rudimentary 
  * printing support now.
  *)
 type var = string
@@ -18,11 +18,9 @@ type rexp =
 | Assign of var * exp                 (* x = y+42 , obj = new A*)
 | Field of var * var * exp            (* obj.x = y+42 *)
 | Call of exp * (exp list)            (* f(x,y,z) *)
-| Method of exp * exp * (exp list)    (* obj.f(x,y,z) *)
 | Load of exp                         (* *(x+3) *)
 | Store of exp * exp                  (* *(x+3) = e *)
 | Malloc of exp                       (* malloc(i) *)
-| New of var                          (* new A; *)
 
 (* every expression comes with its position *)
 and exp = rexp * pos
@@ -35,6 +33,8 @@ type rstmt =
 | For of exp * exp * exp * stmt       (* for (x=0; x<y; x=x+1) y=y*42; *)
 | Return of exp                       (* return e; *)
 | Let of var * exp * stmt             (* let x=3; in x=x+1; *)
+| New of var * var                    (* obj = new A; *)
+| Method of var * var * (exp list)    (* obj.f(x,y,z) *)
 
 
 (* every statement comes with its position *)
@@ -105,8 +105,8 @@ let rec e2s (p:int) ((e,_):exp) : string =
         | Store _ -> 5
         | Malloc _ -> 100
         | Field _ -> 100  (* TO BE CHANGED *)
-        | Method _ -> 100 (* TO BE CHANGED *)
-        | New _ -> 100 (* TO BE CHANGED *)
+        (* | Method _ -> 100 TO BE CHANGED *)
+        (* | New _ -> 100 TO BE CHANGED *)
       in 
     let myprec = prec e in
     let (start,stop) = if myprec >= p then ("","") else ("(",")") in
@@ -123,8 +123,9 @@ let rec e2s (p:int) ((e,_):exp) : string =
     | Store(e1,e2) -> "*"^(e2s 80 e1)^" = "^(e2s myprec e2)
     | Malloc(e) -> "malloc("^(e2s myprec e)^")" 
     | Field(x,y,e3) -> x ^ "." ^ y ^ " = " ^ (e2s myprec e3)
-    | Method(e1,e2,es) -> (e2s myprec e1) ^ "." ^ (e2s myprec e2) ^ "(" ^ (es2s es) ^ ")"
-    | New(x) -> "new "^x ) ^ stop 
+    (* | Method(e1,e2,es) -> e1 ^ "." ^ e2 ^ "(" ^ (es2s es) ^ ")" *)
+    )
+    (* | New(x) -> "new "^x ) ^ stop  *)
 and es2s (es:exp list) : string = 
     match es with
       [] -> ""
@@ -157,6 +158,8 @@ let rec s2s i (s,_) =
                        (exp2string e3)^") {\n"^(s2s (i+2) s)^(tab i)^"}\n"
     | Let(x,e,s) -> 
       (tab i)^"let "^x^" = "^(exp2string e)^"; {\n"^(s2s (i+2) s)^(tab i)^"}\n"
+    | New(v1, v2) -> (tab i) ^ v1 ^  " = new " ^ v2 ^ ";\n"
+    | Method(v1, v2, es) -> (tab i) ^ v1 ^ "." ^ v2 ^ "(" ^ (es2s es) ^ ");\n"
 (* convert a statement to string with starting nesting depth of 0 *)
 let stmt2string s = s2s 0 s
 

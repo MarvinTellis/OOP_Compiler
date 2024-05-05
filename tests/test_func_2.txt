@@ -7,16 +7,20 @@ Class A{
   }
 }
 main() {
-  let obj = new A;
+  obj = new A;
   obj.x = 1;
   obj.y = 2;
-  return obj.foo(5);
+  result = obj.foo(5);
+  return result;
 }
+
+Objects in code
+[ obj ]
 
 Variable depth 
 A : [ x y ]
 B : [ x y a b ]
 
 Function depth
-A  : [ (foo) (bar) ]
+A  : [ (foo : func1) (bar : func2) ]
 B  : [ (foo) (bar) (car) ]

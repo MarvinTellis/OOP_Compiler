@@ -1,27 +1,30 @@
 main() {
   let result = 0; {
     let obj = 0; {
-      
-      obj = malloc(12);
-      *(obj+4) = 0;     
-      *(obj+8) = 0;    
-      *obj = malloc(4);    
-      *(*obj) = func1;      
 
-      *(obj+4) = 1;     
-      *(obj+8) = 2;    
+    let t1 = 0;{
+      t1 = malloc(12);
+      *(t1+4) = 0;     
+      *(t1+8) = 0;    
+      *t1 = malloc(4);    
+      *(*t1) = func1;
+      obj = t1;
+    }
 
-      let t3 = 0; {
-        let t4 = 0; {
-          t3 = *obj;      
-          t4 = *t3;         
-          let t5 = 0;{
-            result = 5;
-            t5 = result;
-            result = t4(obj, t5); 
-          }
+    *(obj+4) = 1;     
+    *(obj+8) = 2;    
+
+    let t3 = 0; {
+      let t4 = 0; {
+        t3 = *obj;      
+        t4 = *t3;         
+        let t5 = 0;{
+          result = 5;
+          t5 = result;
+          result = t4(obj, t5); 
         }
       }
+    }
     }
     return result;
   }

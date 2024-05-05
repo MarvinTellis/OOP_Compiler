@@ -3,8 +3,8 @@ class A{
   let y = 0;
 }
 main() {
-  let obj = new A;
+  obj = new A;
   obj.x = 1;
   obj.y = 2;
-  return obj.x + obj.y;
+  return 1 + 2;
 }

@@ -88,6 +88,9 @@ stmt :
       (For(e1,e2,e3,$9), rhs 1)
     }
 | LET ID EQ yexp SEMI stmt { (Let($2,$4,$6), rhs 1) }
+| ID EQ NEW ID SEMI { (New ($1, $4), rhs 1) }
+| ID PERIOD ID LPAREN RPAREN { (Method($1,$3,[]), rhs 1) }
+| ID PERIOD ID LPAREN explist RPAREN { (Method($1,$3,$5), rhs 1) }
 
 stmtlist :
   stmt { $1 }
@@ -147,10 +150,7 @@ unaryexp :
 atomicexp :
   INT { (Int $1, rhs 1) }
 | ID { (Var $1, rhs 1) }
-| NEW ID { (New $2, rhs 1) }
 | atomicexp LPAREN RPAREN { (Call($1,[]), rhs 1) }
 | atomicexp LPAREN explist RPAREN { (Call($1,$3), rhs 1) }
-| atomicexp PERIOD atomicexp LPAREN RPAREN { (Method($1,$3,[]), rhs 1) }
-| atomicexp PERIOD atomicexp LPAREN explist RPAREN { (Method($1,$3,$5), rhs 1) }
 | MALLOC LPAREN yexp RPAREN { (Malloc($3), rhs 1) }
 | LPAREN yexp RPAREN { $2 }

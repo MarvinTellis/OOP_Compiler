@@ -1,0 +1,21 @@
+class A{
+  let x = 0;
+  let y = 0;
+  foo(){
+    return x + y;
+  }
+  bar(m){
+    let i = 0; {
+      while (i < 5) {
+        x = x + y;
+        y = y + 1;
+        i = i + 1;
+      }
+      return x;
+    }
+  }
+}
+main() {
+  obj = new A;
+  return obj.bar(5);
+}

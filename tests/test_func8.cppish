@@ -1,0 +1,15 @@
+class A{
+  let x = 0;
+  let y = 0;
+  foo(){
+    return x + y;
+  }
+  bar(m){
+    x = 10;
+    return foo() + m;
+  }
+}
+main() {
+  obj = new A;
+  return obj.bar(5);
+}

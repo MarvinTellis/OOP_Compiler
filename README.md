@@ -5,11 +5,9 @@ Implemented an extension to the in-class compiler that maps CPPish down to Cish.
 2. Classes & Inheritance
 3. Class methods and method invocation
 
-The file cppish_ast.ml gives the abstract syntax for CPPish programs, and the files cppish_lex.mll and cppish_parse.mly provide a rudimentary lexer and parser for CPPish. 
+The file `cppish_ast.ml` gives the abstract syntax for CPPish programs, and the files `cppish_lex.mll` and `cppish_parse.mly` provide a rudimentary lexer and parser for CPPish. The file cppish_compile.ml has the core logic to translate CPPish AST to Cish AST and the file `cish_eval.ml` provides a direct interpreter for Cish.
 
-The file cish_eval.ml provides a direct interpreter for Cish.
-
-The directory tests/ contains the exhaustive testcases we have used to test out toy compiler. Some example output are listed in expected_outputs/ directory.
+The directory `tests/` contains the exhaustive testcases we have used to test out toy compiler. Some example output are listed in `expected_outputs/` directory.
 
 Running make in the current directory will generate 2 executables 
 1. my_cppish 

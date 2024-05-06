@@ -158,7 +158,12 @@ let rec compile_expression (class_name : string) (expr : Cppish_ast.exp) : (Cish
       (Cish_ast.Or(new_e1, new_e2), 0)
   | (Cppish_ast.Assign(v, e), _) -> 
       let new_e = compile_expression class_name e in
-      (Cish_ast.Assign(v, new_e), 0)
+      let updated_var = if class_name <> "" && List.mem v (Hashtbl.find fieldTbl class_name) then 
+        let depth = get_index_of_field v (Hashtbl.find fieldTbl class_name) in
+        Cish_ast.exp2string ((Cish_ast.Load( (Cish_ast.Binop((Cish_ast.Var("this"),0) , Cish_ast.Plus, (Cish_ast.Int(depth*4), 0) ), 0) ), 0))
+        else v 
+      in
+      (Cish_ast.Assign(updated_var, new_e), 0)
   | (Cppish_ast.ClasAssign(v1, v2, e), _) -> 
       let new_e = compile_expression class_name e in
       let depth = get_index_of_field v2 (Hashtbl.find fieldTbl (Hashtbl.find objClassTbl v1)) in
@@ -280,7 +285,6 @@ let rec generate_nested_let_stmts vars body : Cish_ast.stmt =
 let rec compile_main_body (pg :Cppish_ast.program) : unit = 
   match pg with 
   | hd :: tl ->
-    (* print_endline (Cppish_ast.classOrFunc2string hd); *)
     (match hd with 
     | Cppish_ast.Clas {name; body; extend; pos} -> 
       let _ = Hashtbl.add fieldTbl name [] in
@@ -291,21 +295,16 @@ let rec compile_main_body (pg :Cppish_ast.program) : unit =
       let _ = update_funcTbl_with_lst name parent_func_lst in
       (* Parent class function handling *)
       compile_class_stmt name body;
-      (* print_func_table funcTbl; *)
     | Cppish_ast.Fn {name; args; body; pos}  -> 
       let new_body = compile_cpp_stmt "" body in
       object_lst := ["result"] @ !object_lst;
       let updated_body = if name = "main" then generate_nested_let_stmts !object_lst new_body else new_body in
-      (* let new_name = if name = "main" then "main" else new_label() in *)
       let c_Fun_sig = Cish_ast.Fn {name = name; args = args; body = updated_body; pos = 0} in
-      (* let _ = print_endline (Cish_ast.fn2string c_Fun_sig) in *)
       global_func_list := c_Fun_sig :: !global_func_list;
     );
     compile_main_body tl;
   | [] -> ()
 
 let rec compile_program_body (pg :Cppish_ast.program) : Cish_ast.program =
-  (* print_endline (Cppish_ast.prog2string pg); *)
   compile_main_body pg;
-  (* List.iter (fun x -> Printf.printf "%s; " x ) !object_lst; *)
   !global_func_list

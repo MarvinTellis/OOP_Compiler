@@ -16,11 +16,13 @@ type rexp =
 | And of exp * exp                    (* x < y && y < z *)
 | Or of exp * exp                     (* x < y || x < z *)
 | Assign of var * exp                 (* x = y+42 , obj = new A*)
-| Field of var * var * exp            (* obj.x = y+42 *)
+| ClasAssign of var * var * exp       (* obj.x = y *)
+| Field of var * var                  (* obj.x *)
 | Call of exp * (exp list)            (* f(x,y,z) *)
 | Load of exp                         (* *(x+3) *)
 | Store of exp * exp                  (* *(x+3) = e *)
 | Malloc of exp                       (* malloc(i) *)
+| Method of var * var * (exp list)    (* obj.f(x,y,z) *)
 
 (* every expression comes with its position *)
 and exp = rexp * pos
@@ -34,8 +36,6 @@ type rstmt =
 | Return of exp                       (* return e; *)
 | Let of var * exp * stmt             (* let x=3; in x=x+1; *)
 | New of var * var                    (* obj = new A; *)
-| Method of var * var * (exp list)    (* obj.f(x,y,z) *)
-
 
 (* every statement comes with its position *)
 and stmt = rstmt * pos
@@ -104,8 +104,9 @@ let rec e2s (p:int) ((e,_):exp) : string =
         | Load _ -> 80
         | Store _ -> 5
         | Malloc _ -> 100
-        | Field _ -> 100  (* TO BE CHANGED *)
-        (* | Method _ -> 100 TO BE CHANGED *)
+        | Field _ -> 100
+        | ClasAssign(_, _, _) -> 100  (* TO BE CHANGED *)
+        | Method _ -> 100 (* TO BE CHANGED *)
         (* | New _ -> 100 TO BE CHANGED *)
       in 
     let myprec = prec e in
@@ -118,12 +119,13 @@ let rec e2s (p:int) ((e,_):exp) : string =
     | And(e1,e2) -> (e2s myprec e1) ^ " && " ^ (e2s myprec e2)
     | Or(e1,e2) -> (e2s myprec e1) ^ " || " ^ (e2s myprec e2)
     | Assign(x,e) -> x ^ " = " ^ (e2s myprec e)
+    | ClasAssign(ob,x,e) -> ob ^ "." ^ x ^ " = " ^ (e2s myprec e)
     | Call(e,es) -> (e2s myprec e) ^ "(" ^ (es2s es) ^ ")"
     | Load e -> "*" ^ (e2s myprec e)
     | Store(e1,e2) -> "*"^(e2s 80 e1)^" = "^(e2s myprec e2)
     | Malloc(e) -> "malloc("^(e2s myprec e)^")" 
-    | Field(x,y,e3) -> x ^ "." ^ y ^ " = " ^ (e2s myprec e3)
-    (* | Method(e1,e2,es) -> e1 ^ "." ^ e2 ^ "(" ^ (es2s es) ^ ")" *)
+    | Field(x,y) -> x ^ "." ^ y 
+    | Method(e1,e2,es) -> e1 ^ "." ^ e2 ^ "(" ^ (es2s es) ^ ")"
     )
     (* | New(x) -> "new "^x ) ^ stop  *)
 and es2s (es:exp list) : string = 
@@ -159,7 +161,7 @@ let rec s2s i (s,_) =
     | Let(x,e,s) -> 
       (tab i)^"let "^x^" = "^(exp2string e)^"; {\n"^(s2s (i+2) s)^(tab i)^"}\n"
     | New(v1, v2) -> (tab i) ^ v1 ^  " = new " ^ v2 ^ ";\n"
-    | Method(v1, v2, es) -> (tab i) ^ v1 ^ "." ^ v2 ^ "(" ^ (es2s es) ^ ");\n"
+    (* | Method(v1, v2, es) -> (tab i) ^ v1 ^ "." ^ v2 ^ "(" ^ (es2s es) ^ ");\n" *)
 (* convert a statement to string with starting nesting depth of 0 *)
 let stmt2string s = s2s 0 s
 
@@ -169,28 +171,28 @@ let fn2string (f' : funcsig) =
   f'.name ^ "(" ^ (String.concat "," f'.args) ^ ") {\n" ^
   (s2s 3 f'.body) ^ "}\n"
 
-(* convert a statement to string -- i tracks the current nesting depth *)
-(* let rec cs2s i (s,_) = 
+(* convert a class statement to string -- i tracks the current nesting depth *)
+let rec cs2s i (s,_) = 
 match s with
- Seq(s1, s2) -> (cs2s i (s1,0))^(cs2s i (s2,0))
-| Let(x,e,s) -> 
-  (tab i)^"let "^x^" = "^(exp2string e)^"; {\n"^(s2s (i+2) s)^(tab i)^"}\n"
+ Seq(s1, s2) -> (cs2s i s1)^(cs2s i s2)
+| Let(x,e) -> 
+  (tab i)^"let "^x^" = "^(exp2string e)^"; \n"
 | Fn(f) -> 
-  (tab i) ^ fn2string (Fn f) *)
+  (tab i) ^ fn2string (f)
 
 (* convert a class to a string *)
-(* let clas2string f = 
-  let Clas (f') = f in
-  let extend_str = match f'.extend with
-    [] -> ""
-    | [ x ] -> " extends " ^ x
-    | _ -> raise (Failure "Multiple inheritance not supported") in
-  f'.name ^ extend_str ^ " {\n" ^
-  cs2s 3 f'.body ^ "}\n" *)
+let clas2string f = 
+  f.name ^ " EXTEND " ^ f.extend ^ " {\n" ^
+  cs2s 3 f.body ^ "}\n"
 
 (* convert a program to a string *)
 (* let prog2string fs = String.concat "" (List.map fn2string fs) *)
 let prog2string fs = String.concat "" (List.map ( fun x ->
   match x with 
-    Clas c -> "" (* clas2string c *)
+    Clas c -> clas2string c
   | Fn f -> fn2string f ) fs)
+
+let classOrFunc2string x =
+  match x with 
+    Clas c -> clas2string c
+  | Fn f -> fn2string f 

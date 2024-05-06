@@ -1,14 +1,16 @@
-Class A{
+class A{
   let x = 0;
   let y = 0;
-
   foo(){
     return x + y;
   }
+  bar(z){
+    return x+y+z;
+  }
 }
 main() {
-  let obj = new A;
+  obj = new A;
   obj.x = 1;
   obj.y = 2;
-  return obj.foo();
+  return obj.bar(obj.foo());
 }

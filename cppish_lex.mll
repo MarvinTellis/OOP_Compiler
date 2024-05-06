@@ -52,7 +52,7 @@ rule lexer = parse
 | "for" { FOR }
 | "let" { LET }
 | "malloc" { MALLOC }
-| "extend" { EXTEND }
+| "extends" { EXTEND }
 | "class" { CLAS }
 | "." { PERIOD }
 | "new" { NEW }

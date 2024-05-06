@@ -1,4 +1,4 @@
-Class A{
+class A{
   let x = 0;
   let y = 0;
 
@@ -6,24 +6,25 @@ Class A{
     return x + y;
   }
 }
-Class B extends A{
+class B extends A{
   let a = 0;
   let b = 0;
 
   bar(){
-    return a + b;
+    return x + y + a + b;
   }
 }
 main() {
-  let boo = new B;
-  let obj = new A;
+  boo = new B;
+  obj = new A;
+
+  obj.x = 11;
+  obj.y = 11;
+
   boo.x = 2;
   boo.y = 3;
   boo.a = 2;
   boo.b = 3;
-
-  obj.x = 10;
-  obj.y = 12;
   
-  return boo.bar() + obj.car();
+  return obj.car() + boo.bar();
 }

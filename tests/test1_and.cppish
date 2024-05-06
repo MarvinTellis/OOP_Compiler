@@ -4,7 +4,6 @@ class A{
 }
 main() {
   obj = new A;
-  obj.x = 1;
-  obj.y = 2;
-  return obj.x + obj.y;
+  obj.x = 10;
+  return obj.x && obj.y;
 }

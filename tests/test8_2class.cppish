@@ -1,14 +1,14 @@
-Class A{
+class A{
   let x = 0;
   let y = 0;
 }
-Class B{
+class B{
   let a = 0;
   let b = 0;
 }
 main() {
-  let obj = new A;
-  let foo = new B;
+  obj = new A;
+  foo = new B;
   obj.x = 2;
   obj.y = 3;
   foo.a = 10;

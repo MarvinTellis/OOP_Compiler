@@ -6,12 +6,14 @@ exception Implement_Me
 (* generate fresh labels *)
 let label_counter = ref 0
 let new_int() = (label_counter := (!label_counter) + 1; !label_counter)
-let new_label() = "FUNC_" ^ (string_of_int (new_int()))
-let new_variable() = "t_" ^ (string_of_int (new_int()))
+let new_label() = "func" ^ (string_of_int (new_int()))
+let new_variable() = "t" ^ (string_of_int (new_int()))
 
 let object_lst = ref []
 
 let global_func_list = ref []
+
+let method_invoc = ref (Cish_ast.skip ,0)
 
 module StringSet = Set.Make(String)
 
@@ -23,6 +25,28 @@ let fieldTbl : (string, string list) Hashtbl.t = Hashtbl.create 50
 
 (* Mapping from Class names to Function list *)
 let funcTbl : (string, (string * string) list) Hashtbl.t = Hashtbl.create 50 
+
+let print_obj_tbl_table (tbl : (string, string) Hashtbl.t) : unit =
+  print_endline "PRINTING Obj CLASS TABLE";
+  Hashtbl.iter (fun key set ->
+    Printf.printf "%s -> %s" key set
+  ) tbl
+
+let print_field_table (tbl : (string, string list) Hashtbl.t) : unit =
+  print_endline "PRINTING FIELD TABLE";
+  Hashtbl.iter (fun key set ->
+    Printf.printf "%s -> [" key;
+    List.iter (fun value -> Printf.printf "%s; " value) set;
+    Printf.printf "]\n"
+  ) tbl
+
+let print_func_table (tbl : (string, (string * string) list) Hashtbl.t) : unit =
+  print_endline "PRINTING FUNCTION TABLE";
+  Hashtbl.iter (fun key set ->
+    Printf.printf "%s -> [" key;
+    List.iter (fun (v1,v2) -> Printf.printf " (%s : %s) ," v1 v2) set;
+    Printf.printf "]\n"
+  ) tbl
 
 let update_fieldTable (key : string) (value : string) : unit =
   let og_list = try (Hashtbl.find fieldTbl key) with Not_found -> [] in
@@ -93,102 +117,131 @@ let rec generate_stmts_func base_offset temp_name (lst : (string*string) list) :
 let rec compile_expression (class_name : string) (expr : Cppish_ast.exp) : (Cish_ast.exp) = 
   match expr with
   | (Cppish_ast.Int i, _) -> (Cish_ast.Int i, 0)
-  | (Cppish_ast.Var v, _) -> 
-    if List.mem v (Hashtbl.find fieldTbl class_name) then 
-      let depth = get_index_of_field v (Hashtbl.find fieldTbl class_name) in
-      (Cish_ast.Load( (Cish_ast.Binop((Cish_ast.Var("this"),0) , Cish_ast.Plus, (Cish_ast.Int(depth*4), 0) ), 0) ), 0)
-    else 
-      (Cish_ast.Var v, 0)
+  | (Cppish_ast.Var v, _) ->
+      if class_name <> "" && List.mem v (Hashtbl.find fieldTbl class_name) then 
+        let depth = get_index_of_field v (Hashtbl.find fieldTbl class_name) in
+        (Cish_ast.Load( (Cish_ast.Binop((Cish_ast.Var("this"),0) , Cish_ast.Plus, (Cish_ast.Int(depth*4), 0) ), 0) ), 0)
+      else 
+        (Cish_ast.Var v, 0)
   | (Cppish_ast.Binop (e1, op, e2), _) -> 
-    let new_e1 = compile_expression class_name e1 in
-    let new_e2 = compile_expression class_name e2 in
-    (match op with 
-    | Cppish_ast.Plus -> (Cish_ast.Binop(new_e1, Cish_ast.Plus, new_e2), 0)
-    | Cppish_ast.Minus -> (Cish_ast.Binop(new_e1, Cish_ast.Minus, new_e2), 0)
-    | Cppish_ast.Times -> (Cish_ast.Binop(new_e1, Cish_ast.Times, new_e2), 0)
-    | Cppish_ast.Div -> (Cish_ast.Binop(new_e1, Cish_ast.Div, new_e2), 0)
-    | Cppish_ast.Eq -> (Cish_ast.Binop(new_e1, Cish_ast.Eq, new_e2), 0)
-    | Cppish_ast.Neq -> (Cish_ast.Binop(new_e1, Cish_ast.Neq, new_e2), 0)
-    | Cppish_ast.Lt -> (Cish_ast.Binop(new_e1, Cish_ast.Lt, new_e2), 0)
-    | Cppish_ast.Lte -> (Cish_ast.Binop(new_e1, Cish_ast.Lte, new_e2), 0)
-    | Cppish_ast.Gt -> (Cish_ast.Binop(new_e1, Cish_ast.Gt, new_e2), 0)
-    | Cppish_ast.Gte -> (Cish_ast.Binop(new_e1, Cish_ast.Gte, new_e2), 0)
-    )
+      let new_e1 = compile_expression class_name e1 in
+      let new_e2 = compile_expression class_name e2 in
+      (match op with 
+      | Cppish_ast.Plus -> (Cish_ast.Binop(new_e1, Cish_ast.Plus, new_e2), 0)
+      | Cppish_ast.Minus -> (Cish_ast.Binop(new_e1, Cish_ast.Minus, new_e2), 0)
+      | Cppish_ast.Times -> (Cish_ast.Binop(new_e1, Cish_ast.Times, new_e2), 0)
+      | Cppish_ast.Div -> (Cish_ast.Binop(new_e1, Cish_ast.Div, new_e2), 0)
+      | Cppish_ast.Eq -> (Cish_ast.Binop(new_e1, Cish_ast.Eq, new_e2), 0)
+      | Cppish_ast.Neq -> (Cish_ast.Binop(new_e1, Cish_ast.Neq, new_e2), 0)
+      | Cppish_ast.Lt -> (Cish_ast.Binop(new_e1, Cish_ast.Lt, new_e2), 0)
+      | Cppish_ast.Lte -> (Cish_ast.Binop(new_e1, Cish_ast.Lte, new_e2), 0)
+      | Cppish_ast.Gt -> (Cish_ast.Binop(new_e1, Cish_ast.Gt, new_e2), 0)
+      | Cppish_ast.Gte -> (Cish_ast.Binop(new_e1, Cish_ast.Gte, new_e2), 0)
+      )
   | (Cppish_ast.Not(e), _) -> 
-    let new_e = compile_expression class_name e in
-    (Cish_ast.Not(new_e), 0)
+      let new_e = compile_expression class_name e in
+        (Cish_ast.Not(new_e), 0)
   | (Cppish_ast.And(e1, e2), _) ->
-    let new_e1 = compile_expression class_name e1 in
-    let new_e2 = compile_expression class_name e2 in
-    (Cish_ast.And(new_e1, new_e2), 0)
+      let new_e1 = compile_expression class_name e1 in
+      let new_e2 = compile_expression class_name e2 in
+      (Cish_ast.And(new_e1, new_e2), 0)
   | (Cppish_ast.Or(e1, e2), _) ->
-    let new_e1 = compile_expression class_name e1 in
-    let new_e2 = compile_expression class_name e2 in
-    (Cish_ast.Or(new_e1, new_e2), 0)
+      let new_e1 = compile_expression class_name e1 in
+      let new_e2 = compile_expression class_name e2 in
+      (Cish_ast.Or(new_e1, new_e2), 0)
   | (Cppish_ast.Assign(v, e), _) -> 
-    let new_e = compile_expression class_name e in
-    (Cish_ast.Assign(v, new_e), 0)
-  | (Cppish_ast.Field(obj, v, e), _) ->
-    let new_e = compile_expression class_name e in
-    let depth = get_index_of_field v (Hashtbl.find fieldTbl (Hashtbl.find objClassTbl obj)) in
-    (Cish_ast.Store( (Cish_ast.Binop((Cish_ast.Var(obj),0) , Cish_ast.Plus, (Cish_ast.Int(depth*4), 0) ), 0) , new_e), 0) 
+      let new_e = compile_expression class_name e in
+      (Cish_ast.Assign(v, new_e), 0)
+  | (Cppish_ast.ClasAssign(v1, v2, e), _) -> 
+      let new_e = compile_expression class_name e in
+      let depth = get_index_of_field v2 (Hashtbl.find fieldTbl (Hashtbl.find objClassTbl v1)) in
+      (Cish_ast.Store( (Cish_ast.Binop((Cish_ast.Var(v1),0) , Cish_ast.Plus, (Cish_ast.Int(depth*4), 0) ), 0) , new_e), 0)
+  | (Cppish_ast.Field(obj, v), _) ->
+      let depth = get_index_of_field v (Hashtbl.find fieldTbl (Hashtbl.find objClassTbl obj)) in
+      (Cish_ast.Load(Cish_ast.Binop((Cish_ast.Var(obj),0) , Cish_ast.Plus, (Cish_ast.Int(depth*4), 0) ), 0), 0)
   | (Cppish_ast.Call(e, lst), _) ->
-    let new_e = compile_expression class_name e in
-    let new_lst = List.map (compile_expression class_name) lst in
-    (Cish_ast.Call(new_e, new_lst), 0)
+      let new_e = compile_expression class_name e in
+      let new_lst = List.map (compile_expression class_name) lst in
+      (Cish_ast.Call(new_e, new_lst), 0)
   | (Cppish_ast.Load(e), _) ->
-    let new_e = compile_expression class_name e in
-    (Cish_ast.Load(new_e), 0)
+      let new_e = compile_expression class_name e in
+      (Cish_ast.Load(new_e), 0)
   | (Cppish_ast.Store(e1, e2), _) ->
-    let new_e1 = compile_expression class_name e1 in
-    let new_e2 = compile_expression class_name e2 in
-    (Cish_ast.Store(new_e1, new_e2), 0)
+      let new_e1 = compile_expression class_name e1 in
+      let new_e2 = compile_expression class_name e2 in
+      (Cish_ast.Store(new_e1, new_e2), 0)
   | (Cppish_ast.Malloc(e), _) ->
-    let new_e = compile_expression class_name e in
-    (Cish_ast.Malloc(new_e), 0)
+      let new_e = compile_expression class_name e in
+      (Cish_ast.Malloc(new_e), 0)
+  | (Cppish_ast.Method(obj, fname, lst), _) ->
+      let new_lst = List.map (compile_expression class_name) lst in
+      let t1 = new_variable() in
+      let t2 = new_variable() in
+      let temp = new_variable() in
+      let v_table = (Cish_ast.Exp(Cish_ast.Assign(t1, (Cish_ast.Load(Cish_ast.Var(obj), 0), 0)), 0), 0) in
+      let func_index = get_index_of_func fname (Hashtbl.find funcTbl (Hashtbl.find objClassTbl obj)) in
+      let func_ptr = (Cish_ast.Load(Cish_ast.Binop((Cish_ast.Var(t1), 0), Plus, (Cish_ast.Int(func_index*4), 0)), 0), 0) in
+      let func_to_call = (Cish_ast.Exp((Cish_ast.Assign(t2, func_ptr), 0)), 0) in
+      let block = (Cish_ast.Seq(v_table, func_to_call), 0) in
+      let func_call = (Cish_ast.Call( (Cish_ast.Var(t2), 0), (Cish_ast.Var(obj), 0) :: new_lst), 0) in
+      let assign_res = Cish_ast.Exp(Cish_ast.Assign(temp, func_call), 0) , 0 in
+      let bind1 = (Cish_ast.Let(t2, (Cish_ast.Int(0),0), (Cish_ast.Seq(block, assign_res), 0)), 0) in
+      method_invoc := (Cish_ast.Seq( !method_invoc, (Cish_ast.Let(t1, (Cish_ast.Int(0),0), bind1), 0)),0);
+      object_lst := [temp] @ !object_lst;
+      (Cish_ast.Var(temp), 0)
 
 let rec compile_cpp_stmt (class_name : string) (cpp_stmt : Cppish_ast.stmt) : Cish_ast.stmt =
   match cpp_stmt with 
   | (Cppish_ast.Exp(e), _) -> (Cish_ast.Exp(compile_expression class_name e), 0)
-  | (Cppish_ast.Let(v, e, s), _) -> (Cish_ast.Let(v, compile_expression class_name e, compile_cpp_stmt class_name s), 0)
-  | (Cppish_ast.Seq(s1, s2), _) -> (Cish_ast.Seq(compile_cpp_stmt class_name s1, compile_cpp_stmt class_name s2), 0)
-  | (Cppish_ast.If(e, s1, s2), _) -> (Cish_ast.If(compile_expression class_name e, compile_cpp_stmt class_name s1, compile_cpp_stmt class_name s2), 0)
-  | (Cppish_ast.While(e, s), _) -> (Cish_ast.While(compile_expression class_name e, compile_cpp_stmt class_name s), 0)
+  | (Cppish_ast.Let(v, e, s), _) -> 
+      let new_e = compile_expression class_name e in
+      let lcl_cpy = !method_invoc in
+      method_invoc := (Cish_ast.skip, 0);
+      let stmt1 = (Cish_ast.Let(v, new_e, compile_cpp_stmt class_name s), 0) in
+      (Cish_ast.Seq( lcl_cpy, stmt1), 0 )
+  | (Cppish_ast.Seq(s1, s2), _) ->
+      let part1 = compile_cpp_stmt class_name s1 in 
+      let part2 = compile_cpp_stmt class_name s2 in
+      (Cish_ast.Seq(part1, part2), 0)
+  | (Cppish_ast.If(e, s1, s2), _) -> 
+      let cond_e = compile_expression class_name e in
+      let lcl_cpy = !method_invoc in
+      method_invoc := (Cish_ast.skip, 0);
+      let stmt1 = (Cish_ast.If(cond_e, compile_cpp_stmt class_name s1, compile_cpp_stmt class_name s2), 0) in
+      (Cish_ast.Seq( lcl_cpy, stmt1), 0 )
+  | (Cppish_ast.While(e, s), _) -> 
+      let cond_e = compile_expression class_name e in
+      let lcl_cpy = !method_invoc in
+      method_invoc := (Cish_ast.skip, 0);
+      let stmt1 = (Cish_ast.While(cond_e, compile_cpp_stmt class_name s), 0) in
+      (Cish_ast.Seq( lcl_cpy, stmt1), 0 )
   | (Cppish_ast.For(init, cond, incr, s), _) -> (Cish_ast.For(compile_expression class_name init, compile_expression class_name cond,compile_expression class_name incr,compile_cpp_stmt class_name s), 0)
-  | (Cppish_ast.Return e, _) -> (Cish_ast.Return(compile_expression class_name e), 0)
+  | (Cppish_ast.Return e, _) -> 
+    let new_e = compile_expression class_name e in
+    let lcl_cpy = !method_invoc in
+    method_invoc := (Cish_ast.skip, 0);
+    (Cish_ast.Seq( lcl_cpy, (Cish_ast.Return(new_e), 0)), 0 )
   | (Cppish_ast.New (obj_name, class_name), _) -> 
-    object_lst := !object_lst @ [obj_name];
-    Hashtbl.add objClassTbl obj_name class_name;
-    let field_lst = try (Hashtbl.find fieldTbl class_name) with Not_found -> [] in
-    let field_size = List.length field_lst in
-    let t1 = new_variable() in
-    let func_lst = try (Hashtbl.find funcTbl class_name) with Not_found -> [] in
-    let func_size = List.length func_lst in
-    let obj_alloc = (Cish_ast.Assign(t1, (Cish_ast.Malloc(Cish_ast.Int(field_size*4 + 4), 0), 0)), 0) in
-    let field_init_stmt = generate_stmts 1 (Cish_ast.Var(t1), 0) field_lst  in
-    let block_1 = Cish_ast.Seq( (Cish_ast.Exp(obj_alloc), 0) , field_init_stmt) in
-    let v_table = Cish_ast.Load(Cish_ast.Var(t1), 0) in
-    let v_table_init = 
-      if func_size > 0 then (Cish_ast.Exp(Cish_ast.Store((Cish_ast.Var(t1),0), (Cish_ast.Malloc(Cish_ast.Int(func_size*4), 0), 0)), 0), 0)
-      else (Cish_ast.skip, 0)
-    in
-    let func_init_stmt = generate_stmts_func 0 (v_table, 0) func_lst in
-    let block_2 = Cish_ast.Seq( v_table_init , func_init_stmt) in
-    let final_block = Cish_ast.Seq((block_1, 0), (block_2, 0)) in
-    let stm1 = (Cish_ast.Exp(Cish_ast.Assign(obj_name, (Cish_ast.Var(t1), 0)), 0), 0) in
-    (Cish_ast.Let(t1,(Cish_ast.Int(0), 0), (Cish_ast.Seq((final_block, 0), stm1), 0) ), 0)
-  | (Cppish_ast.Method(obj, fname, lst), _) ->
-    let new_lst = List.map (compile_expression class_name) lst in
-    let t1 = new_variable() in
-    let t2 = new_variable() in
-    let v_table = (Cish_ast.Exp(Cish_ast.Assign(t1, (Cish_ast.Load(Cish_ast.Var(obj), 0), 0)), 0), 0) in
-    let func_index = get_index_of_func fname (Hashtbl.find funcTbl (Hashtbl.find objClassTbl obj)) in
-    let func_ptr = (Cish_ast.Load(Cish_ast.Binop((Cish_ast.Var(t1), 0), Plus, (Cish_ast.Int(func_index*4), 0)), 0), 0) in
-    let func_to_call = (Cish_ast.Exp((Cish_ast.Assign(t2, func_ptr), 0)), 0) in
-    let block = (Cish_ast.Seq(v_table, func_to_call), 0) in
-    let func_call = (Cish_ast.Exp(Cish_ast.Call( (Cish_ast.Var(t2), 0), (Cish_ast.Var(obj), 0) :: new_lst), 0), 0) in
-    let bind1 = (Cish_ast.Let(t2, (Cish_ast.Int(0),0), (Cish_ast.Seq(block, func_call), 0)), 0) in
-    (Cish_ast.Let(t1, (Cish_ast.Int(0),0), bind1), 0) 
+      object_lst := !object_lst @ [obj_name];
+      Hashtbl.add objClassTbl obj_name class_name;
+      let field_lst = try (Hashtbl.find fieldTbl class_name) with Not_found -> [] in
+      let field_size = List.length field_lst in
+      let t1 = new_variable() in
+      let func_lst = try (Hashtbl.find funcTbl class_name) with Not_found -> [] in
+      let func_size = List.length func_lst in
+      let obj_alloc = (Cish_ast.Assign(t1, (Cish_ast.Malloc(Cish_ast.Int(field_size*4 + 4), 0), 0)), 0) in
+      let field_init_stmt = generate_stmts 1 (Cish_ast.Var(t1), 0) field_lst  in
+      let block_1 = Cish_ast.Seq( (Cish_ast.Exp(obj_alloc), 0) , field_init_stmt) in
+      let v_table = Cish_ast.Load(Cish_ast.Var(t1), 0) in
+      let v_table_init = 
+        if func_size > 0 then (Cish_ast.Exp(Cish_ast.Store((Cish_ast.Var(t1),0), (Cish_ast.Malloc(Cish_ast.Int(func_size*4), 0), 0)), 0), 0)
+        else (Cish_ast.skip, 0)
+      in
+      let func_init_stmt = generate_stmts_func 0 (v_table, 0) func_lst in
+      let block_2 = Cish_ast.Seq( v_table_init , func_init_stmt) in
+      let final_block = Cish_ast.Seq((block_1, 0), (block_2, 0)) in
+      let stm1 = (Cish_ast.Exp(Cish_ast.Assign(obj_name, (Cish_ast.Var(t1), 0)), 0), 0) in
+      (Cish_ast.Let(t1,(Cish_ast.Int(0), 0), (Cish_ast.Seq((final_block, 0), stm1), 0) ), 0)
 
 let rec compile_class_stmt (class_name : string) (class_stmt : Cppish_ast.classtmt) : unit = 
   (match class_stmt with 
@@ -199,16 +252,27 @@ let rec compile_class_stmt (class_name : string) (class_stmt : Cppish_ast.classt
       let _ = update_funcTable class_name name new_func_name in
       (* TODO : Compile class method body to replace class fields with offsets*)
       let new_body = compile_cpp_stmt class_name body in
-      let class_Fun_sig = Cish_ast.Fn {name = new_label(); args = "this" :: args; body = new_body; pos = 0} in
+      let class_Fun_sig = Cish_ast.Fn {name = new_func_name; args = "this" :: args; body = new_body; pos = 0} in
       global_func_list := !global_func_list @ [class_Fun_sig];
     | (Seq (cstmt1, cstmt2) , _) -> 
       compile_class_stmt class_name cstmt1;
       compile_class_stmt class_name cstmt2;
   )
 
+
+(* Function to generate a nested Let statement *)
+let rec generate_nested_let_stmts vars body : Cish_ast.stmt =
+  match vars with
+  | [] -> body
+  | var :: rest ->
+      let let_exp = Int 0, 0 in
+      let let_stmt = Let (var, let_exp, generate_nested_let_stmts rest body) in
+      (let_stmt,0)
+
 let rec compile_main_body (pg :Cppish_ast.program) : unit = 
   match pg with 
   | hd :: tl ->
+    (* print_endline (Cppish_ast.classOrFunc2string hd); *)
     (match hd with 
     | Cppish_ast.Clas {name; body; extend; pos} -> 
       let _ = Hashtbl.add fieldTbl name [] in
@@ -218,15 +282,22 @@ let rec compile_main_body (pg :Cppish_ast.program) : unit =
       let parent_func_lst = try (Hashtbl.find funcTbl extend) with Not_found -> [] in
       let _ = update_funcTbl_with_lst name parent_func_lst in
       (* Parent class function handling *)
-      compile_class_stmt name body
+      compile_class_stmt name body;
+      (* print_func_table funcTbl; *)
     | Cppish_ast.Fn {name; args; body; pos}  -> 
       let new_body = compile_cpp_stmt "" body in
-      let new_name = if name = "main" then "main" else new_label() in
-      let c_Fun_sig = Cish_ast.Fn {name = new_name; args = [""]; body = new_body; pos = 0} in
-      global_func_list := !global_func_list @ [c_Fun_sig];
-    )
+      object_lst := ["result"] @ !object_lst;
+      let updated_body = if name = "main" then generate_nested_let_stmts !object_lst new_body else new_body in
+      (* let new_name = if name = "main" then "main" else new_label() in *)
+      let c_Fun_sig = Cish_ast.Fn {name = name; args = args; body = updated_body; pos = 0} in
+      (* let _ = print_endline (Cish_ast.fn2string c_Fun_sig) in *)
+      global_func_list := c_Fun_sig :: !global_func_list;
+    );
+    compile_main_body tl;
   | [] -> ()
 
 let rec compile_program_body (pg :Cppish_ast.program) : Cish_ast.program =
-  let _ = compile_main_body pg in
+  (* print_endline (Cppish_ast.prog2string pg); *)
+  compile_main_body pg;
+  (* List.iter (fun x -> Printf.printf "%s; " x ) !object_lst; *)
   !global_func_list

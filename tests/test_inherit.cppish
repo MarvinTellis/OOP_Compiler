@@ -1,13 +1,13 @@
-Class A{
+class A{
   let x = 0;
   let y = 0;
 }
-Class B extends A{
+class B extends A{
   let a = 0;
   let b = 0;
 }
 main() {
-  let obj = new B;
+  obj = new B;
   obj.x = 2;
   obj.y = 3;
   obj.a = 10;

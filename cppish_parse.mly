@@ -75,7 +75,6 @@ idlist :
 
 stmt : 
   SEMI { (skip, rhs 1) }
-| yexp SEMI { (Exp $1, rhs 1) }
 | RETURN yexp SEMI { (Return $2, rhs 1) }
 | LBRACE stmtlist RBRACE { $2 }
 | IF LPAREN yexp RPAREN stmt ELSE stmt { (If($3,$5,$7), rhs 1) } 
@@ -89,8 +88,7 @@ stmt :
     }
 | LET ID EQ yexp SEMI stmt { (Let($2,$4,$6), rhs 1) }
 | ID EQ NEW ID SEMI { (New ($1, $4), rhs 1) }
-| ID PERIOD ID LPAREN RPAREN { (Method($1,$3,[]), rhs 1) }
-| ID PERIOD ID LPAREN explist RPAREN { (Method($1,$3,$5), rhs 1) }
+| yexp SEMI { (Exp $1, rhs 1) }
 
 stmtlist :
   stmt { $1 }
@@ -103,7 +101,7 @@ expopt :
 yexp:
   orexp { $1 }
 | ID EQ yexp { (Assign($1,$3), rhs 1) }
-| ID PERIOD ID EQ yexp { (Field($1,$3,$5), rhs 1) }
+| ID PERIOD ID EQ yexp { (ClasAssign($1,$3,$5), rhs 1) }
 | TIMES unaryexp EQ yexp { (Store($2,$4), rhs 1) }
 
 explist :
@@ -150,7 +148,10 @@ unaryexp :
 atomicexp :
   INT { (Int $1, rhs 1) }
 | ID { (Var $1, rhs 1) }
+| ID PERIOD ID { (Field($1,$3), rhs 1) }
 | atomicexp LPAREN RPAREN { (Call($1,[]), rhs 1) }
 | atomicexp LPAREN explist RPAREN { (Call($1,$3), rhs 1) }
+| ID PERIOD ID LPAREN RPAREN { (Method($1,$3,[]), rhs 1) }
+| ID PERIOD ID LPAREN explist RPAREN { (Method($1,$3,$5), rhs 1) }
 | MALLOC LPAREN yexp RPAREN { (Malloc($3), rhs 1) }
 | LPAREN yexp RPAREN { $2 }

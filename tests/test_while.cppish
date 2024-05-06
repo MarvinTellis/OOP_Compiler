@@ -1,0 +1,15 @@
+class A{
+  let x = 0;
+  let y = 0;
+}
+main() { 
+  obj = new A;
+  let i = 0; {
+    while (i < 5) {
+      obj.x = obj.x + obj.y;
+      obj.y = obj.y + 1;
+      i = i + 1;
+    }
+    return obj.x;
+  }
+}

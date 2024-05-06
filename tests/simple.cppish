@@ -1,0 +1,10 @@
+main(){
+  let result = 0; {
+    let t1 = 0; {
+      return bar(8);
+    }   
+  }
+}
+bar(z){
+  return 5+z;
+}

@@ -3,7 +3,7 @@ class A{
   let y = 0;
 }
 main() {
-  let obj = new A;
+  obj = new A;
   obj.x = 6;
   obj.y = 3;
   return obj.x * obj.y;

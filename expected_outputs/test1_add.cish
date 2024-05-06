@@ -1,20 +1,19 @@
 main() {
-  let result = 0; {
-    let obj = 0;{
-      obj = malloc(12);
-      *(obj+4) = 0; 
-      *(obj+8) = 0;    
-
-      *(obj+4) = 1;
-      *(obj+8) = 2;
-
-      let t1 = 0;{
-        result = *(obj+4);
-        t1 = result;
-        result = *(obj+8);
-        result = result + t1;
-      }
-    }
-    return result;
-  }
+   let result = 0; {
+     let obj = 0; {
+       let t1 = 0; {
+         t1 = malloc(12);
+         *(t1+4) = 0;
+         *(t1+8) = 0;
+         0;
+         0;
+         0;
+         obj = t1;
+       }
+       *(obj+4) = 1;
+       *(obj+8) = 2;
+       0;
+       return *(obj+4)+*(obj+8);
+     }
+   }
 }

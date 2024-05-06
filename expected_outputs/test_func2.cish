@@ -1,0 +1,39 @@
+main() {
+   let result = 0; {
+     let t5 = 0; {
+       let obj = 0; {
+         let t2 = 0; {
+           t2 = malloc(12);
+           *(t2+4) = 0;
+           *(t2+8) = 0;
+           0;
+           *t2 = malloc(4);
+           *(*t2+0) = func1;
+           0;
+           obj = t2;
+         }
+         *(obj+4) = 1;
+         *(obj+8) = 2;
+         0;
+         let t3 = 0; {
+           let t4 = 0; {
+             t3 = *obj;
+             t4 = *(t3+0);
+             t5 = t4(obj,5);
+           }
+         }
+         if (t5) {
+           0;
+           return 15;
+         } else {
+           0;
+           return 10;
+         }
+       }
+     }
+   }
+}
+func1(this,z) {
+   0;
+   return *(this+4)+*(this+8)+z;
+}

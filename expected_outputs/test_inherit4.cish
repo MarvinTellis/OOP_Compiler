@@ -1,0 +1,60 @@
+main() {
+   let result = 0; {
+     let t10 = 0; {
+       let t7 = 0; {
+         let coo = 0; {
+           let t4 = 0; {
+             t4 = malloc(28);
+             *(t4+4) = 0;
+             *(t4+8) = 0;
+             *(t4+12) = 0;
+             *(t4+16) = 0;
+             *(t4+20) = 0;
+             *(t4+24) = 0;
+             0;
+             *t4 = malloc(12);
+             *(*t4+0) = func1;
+             *(*t4+4) = func2;
+             *(*t4+8) = func3;
+             0;
+             coo = t4;
+           }
+           *(coo+4) = 1;
+           *(coo+8) = 2;
+           *(coo+12) = 3;
+           *(coo+16) = 4;
+           *(coo+20) = 5;
+           *(coo+24) = 6;
+           0;
+           let t5 = 0; {
+             let t6 = 0; {
+               t5 = *coo;
+               t6 = *(t5+0);
+               t7 = t6(coo);
+             }
+           }
+           let t8 = 0; {
+             let t9 = 0; {
+               t8 = *coo;
+               t9 = *(t8+8);
+               t10 = t9(coo);
+             }
+           }
+           return t7+t10;
+         }
+       }
+     }
+   }
+}
+func1(this) {
+   0;
+   return *(this+4)+*(this+8);
+}
+func2(this) {
+   0;
+   return *(this+4)+*(this+8)+*(this+12)+*(this+16);
+}
+func3(this) {
+   0;
+   return *(this+4)+*(this+8)+*(this+12)+*(this+16)+*(this+20)+*(this+24);
+}

@@ -1,5 +1,10 @@
 # Object Oriented Compiler (CPPish -> Cish)
 
+#### Authors 
+- Joel Marvin Tellis (jt4680)
+- Anirudh Nistala (apn7823)
+
+## Description
 Implemented an extension to the in-class compiler that maps CPPish down to Cish. CPPish supports the following language features: 
 1. Objects (with named fields storing integers)
 2. Classes & Inheritance

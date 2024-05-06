@@ -81,6 +81,11 @@ let rec get_index_of_func v lst =
   | (v1, v2) :: tl -> 
       if v = v1 then 0 else 1 + get_index_of_func v tl
 
+let rec find_first_value (lst : (string*string)list) (s:string) =
+  match lst with
+  | [] -> None
+  | (x, y) :: _ when x = s -> Some y
+  | _ :: rest -> find_first_value rest s
 
 (* Function to generate a single assignment statement *)
 let generate_assign_stmt base_offset temp_name =
@@ -122,7 +127,9 @@ let rec compile_expression (class_name : string) (expr : Cppish_ast.exp) : (Cish
         let depth = get_index_of_field v (Hashtbl.find fieldTbl class_name) in
         (Cish_ast.Load( (Cish_ast.Binop((Cish_ast.Var("this"),0) , Cish_ast.Plus, (Cish_ast.Int(depth*4), 0) ), 0) ), 0)
       else 
-        (Cish_ast.Var v, 0)
+        (match find_first_value (try (Hashtbl.find funcTbl class_name) with Not_found -> []) v with
+        | None -> (Cish_ast.Var v, 0)
+        | Some x -> (Cish_ast.Var x, 0))
   | (Cppish_ast.Binop (e1, op, e2), _) -> 
       let new_e1 = compile_expression class_name e1 in
       let new_e2 = compile_expression class_name e2 in
@@ -162,7 +169,8 @@ let rec compile_expression (class_name : string) (expr : Cppish_ast.exp) : (Cish
   | (Cppish_ast.Call(e, lst), _) ->
       let new_e = compile_expression class_name e in
       let new_lst = List.map (compile_expression class_name) lst in
-      (Cish_ast.Call(new_e, new_lst), 0)
+      let updated_list = if class_name <> "" then [(Cish_ast.Var("this"),0)] @ new_lst else new_lst in
+      (Cish_ast.Call(new_e, updated_list), 0)
   | (Cppish_ast.Load(e), _) ->
       let new_e = compile_expression class_name e in
       (Cish_ast.Load(new_e), 0)

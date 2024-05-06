@@ -1,0 +1,36 @@
+class A{
+  let x = 0;
+  let y = 0;
+
+  car(){
+    return x + y;
+  }
+}
+class B extends A{
+  let a = 0;
+  let b = 0;
+
+  bar(){
+    return x + y + a + b;
+  }
+}
+class C extends B{
+  let m = 0;
+  let n = 0;
+
+  blink(){
+    return x + y + a + b + m + n;
+  }
+}
+main() {
+  coo = new C;
+  
+  coo.x = 1;
+  coo.y = 2;
+  coo.a = 3;
+  coo.b = 4;
+  coo.m = 5;
+  coo.n = 6;
+  
+  return coo.car() + coo.blink();
+}

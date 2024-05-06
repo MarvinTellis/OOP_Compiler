@@ -1,0 +1,26 @@
+class A{
+  let x = 0;
+  let y = 0;
+
+  car(){
+    return x + y;
+  }
+}
+class B extends A{
+  let a = 0;
+  let b = 0;
+
+  bar(){
+    return x + y + a + b;
+  }
+}
+main() {
+  boo = new B;
+
+  boo.x = 2;
+  boo.y = 3;
+  boo.a = 12;
+  boo.b = 13;
+  
+  return boo.car();
+}
